@@ -1,0 +1,860 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>the map</title>
+<style>
+@font-face{font-family:"Excalifont";src:url("assets/Excalifont-Regular.woff2") format("woff2");font-display:swap}
+:root{
+  --paper:#fffdf6;--ink:#1e1e1e;--muted:#7a7a72;
+  --red:#e03131;--green:#2f9e44;--blue:#1971c2;--orange:#f08c00;--purple:#9c36b5;
+  --red-soft:#ffe3e3;--green-soft:#d3f9d8;--blue-soft:#d0ebff;--orange-soft:#ffec99;--purple-soft:#eebefa;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--paper);color:var(--ink);font-family:"Excalifont","Comic Sans MS","Chalkboard SE",cursive;overflow:hidden}
+.deck{position:relative;width:100%;height:100%}
+.slide{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;padding:6vh 8vw;text-align:center}
+.slide.active{display:flex}
+.slide.left{align-items:flex-start;text-align:left}
+h1{font-size:clamp(40px,7vw,96px);line-height:1.05;font-weight:400}
+h2{font-size:clamp(28px,4.6vw,64px);line-height:1.1;font-weight:400}
+h3{font-size:clamp(22px,2.8vw,40px);font-weight:400}
+p,li{font-size:clamp(20px,2.6vw,36px);line-height:1.35}
+.small{font-size:clamp(16px,1.6vw,22px);color:var(--muted)}
+.tiny{font-size:clamp(13px,1.2vw,17px);color:var(--muted)}
+.gap{margin-top:3vh}
+.gap2{margin-top:6vh}
+ul{list-style:none}
+li{padding:.35em 0}
+li::before{content:"– ";color:var(--muted)}
+.u{text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:6px;text-decoration-color:var(--orange)}
+.red{color:var(--red)}.green{color:var(--green)}.blue{color:var(--blue)}.orange{color:var(--orange)}.purple{color:var(--purple)}
+.hl{background:linear-gradient(transparent 55%, var(--orange-soft) 55%);padding:0 .15em}
+
+/* sketchy box */
+.box{position:relative;padding:1.2em 1.6em;display:inline-block}
+.box::before{content:"";position:absolute;inset:0;border:3px solid var(--ink);border-radius:8px;filter:url(#sk);pointer-events:none}
+.box.red::before{border-color:var(--red)}.box.blue::before{border-color:var(--blue)}.box.green::before{border-color:var(--green)}.box.orange::before{border-color:var(--orange)}.box.purple::before{border-color:var(--purple)}
+.box.fill-red{background:var(--red-soft)}.box.fill-blue{background:var(--blue-soft)}.box.fill-green{background:var(--green-soft)}.box.fill-orange{background:var(--orange-soft)}.box.fill-purple{background:var(--purple-soft)}
+
+/* fragments */
+.frag{opacity:0;transform:translateY(6px);transition:opacity .25s,transform .25s}
+.frag.on{opacity:1;transform:none}
+
+/* layout helpers */
+.row{display:flex;gap:4vw;align-items:center;justify-content:center;width:100%}
+.col{display:flex;flex-direction:column;gap:1.2vh;align-items:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:3vw;width:100%;align-items:center}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:2vw;width:100%}
+svg.fig{max-width:100%;height:auto;overflow:visible}
+svg .sk{filter:url(#sk)}
+svg text{font-family:"Excalifont","Comic Sans MS",cursive;fill:var(--ink)}
+
+/* memes */
+.meme{position:relative;display:inline-block;max-height:78vh}
+.meme img{display:block;max-height:78vh;max-width:80vw;border-radius:4px}
+.meme .cap{position:absolute;font-family:Arial,Helvetica,sans-serif;font-weight:700;color:#111;line-height:1.1;text-align:center;font-size:clamp(14px,2vw,30px)}
+.meme .cap.white{color:#fff;text-transform:uppercase;font-family:Impact,"Arial Black",sans-serif;font-weight:400;letter-spacing:.5px;text-shadow:-2px -2px 0 #000,2px -2px 0 #000,-2px 2px 0 #000,2px 2px 0 #000,0 3px 0 #000}
+
+/* chrome */
+.hud{position:fixed;left:0;right:0;bottom:0;padding:10px 18px;display:flex;justify-content:space-between;align-items:flex-end;pointer-events:none;font-size:14px;color:var(--muted)}
+.bounty{position:fixed;top:18px;right:22px;font-size:clamp(18px,2vw,28px);padding:.3em .8em;opacity:0;transition:opacity .2s;background:var(--orange-soft)}
+.bounty.show{opacity:1}
+.bounty.flash{animation:pop .4s}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.25) rotate(-3deg)}100%{transform:scale(1)}}
+.notes{position:fixed;top:0;right:0;bottom:0;width:min(420px,38vw);background:#fff8e1;border-left:2px solid #e0d6b0;padding:22px;overflow:auto;transform:translateX(100%);transition:transform .2s;font-size:15px;line-height:1.5;color:#3a3a32;text-align:left;font-family:ui-monospace,Menlo,monospace;white-space:pre-wrap}
+.notes.open{transform:none}
+.notes h4{font-family:inherit;color:#8a7a3a;margin-bottom:10px;font-size:13px;letter-spacing:1px}
+aside{display:none}
+.help{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;padding:24px 32px;font-size:16px;line-height:1.7;display:none;z-index:9;font-family:ui-monospace,Menlo,monospace;box-shadow:0 8px 40px rgba(0,0,0,.15)}
+.help.open{display:block}
+
+/* game slide */
+.game{background:var(--orange-soft)}
+.game .label{font-size:clamp(16px,1.8vw,24px);letter-spacing:3px;color:var(--orange)}
+.game h2{max-width:28ch}
+
+/* levels */
+.lvl{display:grid;grid-template-columns:repeat(3,1fr);gap:2vw;width:100%}
+.lvl .box{text-align:left;padding:1em 1.2em}
+.lvl .n{font-size:clamp(13px,1.2vw,17px);color:var(--muted);letter-spacing:2px}
+.lvl .you{font-size:clamp(18px,2vw,28px);margin:.2em 0 .4em}
+.lvl .boss{font-size:clamp(14px,1.5vw,21px);color:var(--red)}
+.lvl .boss::before{content:"boss: ";color:var(--muted)}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <filter id="sk" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="7" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="3.2" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+  <filter id="sk2" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="3" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="6" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
+
+<div class="deck" id="deck">
+
+<!-- 0 title -->
+<section class="slide">
+  <h1>a map of a territory<br>the game of entrepreneurship</h1>
+  <svg class="fig gap" viewBox="0 0 520 360" width="520">
+    <!-- fortnite-ish island + storm -->
+    <g class="sk" fill="#b2f2bb" stroke="#2f9e44" stroke-width="3">
+      <path d="M90 120 C 60 60, 160 30, 230 50 C 300 20, 400 40, 440 100 C 500 140, 480 230, 430 280 C 380 340, 260 350, 180 320 C 100 300, 50 220, 90 120 Z"/>
+    </g>
+    <g class="sk" fill="#a5d8ff" stroke="#1971c2" stroke-width="2">
+      <ellipse cx="300" cy="200" rx="40" ry="26"/>
+    </g>
+    <g font-size="14" fill="#2b5a33">
+      <text x="120" y="130">pleasant park</text>
+      <text x="200" y="230">tilted towers</text>
+      <text x="320" y="110">lazy lake</text>
+      <text x="330" y="290">retail row</text>
+      <text x="275" y="205">loot lake</text>
+    </g>
+    <g class="sk" fill="none" stroke="#9c36b5" stroke-width="4" stroke-dasharray="10 6">
+      <circle cx="260" cy="190" r="140"/>
+    </g>
+    <g class="sk" fill="none" stroke="#e03131" stroke-width="2.5">
+      <circle cx="230" cy="215" r="55"/>
+    </g>
+    <text x="398" y="78" font-size="14" fill="#9c36b5">storm</text>
+  </svg>
+  <aside>effective use of time, share learnings, test understanding, go out w/ a better idea of the real world than before. keys: → next, n notes, w bounty paid, r rollover, f fullscreen, ? help.</aside>
+</section>
+
+<!-- 1 why i'm here -->
+<section class="slide">
+  <h2>you picked this subject.</h2>
+  <h2 class="frag">so some part of you wants to create value.</h2>
+  <p class="frag gap2">i'm not here to teach you business.<br>i'm here to show you what the territory looks like<br>so you don't walk in lost.</p>
+  <aside>effective use of time, share learnings, test understanding, go out w/ a better idea of the real world than before.</aside>
+</section>
+
+<!-- 2 who i am -->
+<section class="slide left">
+  <ul class="gap">
+    <li>been playing this game since i was 15, im 21 now</li>
+    <li class="frag">sold 7+ products/services, 3-4 markets</li>
+    <li class="frag">work with and learn from 8-figure entrepreneurs</li>
+    <li class="frag">ive been running a holding company for the past 2 years</li>
+    <li class="frag">graduated from sishya in 2023, college dropout</li>
+  </ul>
+</section>
+
+<!-- 3 in 60 min -->
+<section class="slide left">
+  <p class="small">in the next 60 minutes</p>
+  <ul class="gap">
+    <li class="frag">quick reality check</li>
+    <li class="frag">a map</li>
+    <li class="frag">the levels of the game</li>
+    <li class="frag">the ways people die</li>
+    <li class="frag">some advice you didn't ask for</li>
+  </ul>
+</section>
+
+<!-- 4 game rules -->
+<section class="slide game">
+  <p class="label">THE GAME</p>
+  <div class="box orange gap" style="background:#fff">
+    <h2>₹100</h2>
+  </div>
+  <ul class="gap2" style="text-align:left">
+    <li class="frag">every few minutes i point at someone</li>
+    <li class="frag">you give me an example of whatever we just talked about</li>
+  </ul>
+</section>
+
+<!-- 5 parents 10 years -->
+<section class="slide">
+  <h1>uncertainty is at an all time high</h1>
+  <h1 class="frag red gap">how do we move with this much fog of war?</h1>
+  <aside>uncertainty point. the world has never been this uncertain bc tech is enabling things nobody has seen before.</aside>
+</section>
+
+<!-- 6 2019 vs now -->
+<section class="slide">
+  <svg class="fig" viewBox="0 0 900 380" width="900">
+    <g class="sk" fill="none" stroke="#1e1e1e" stroke-width="2.5">
+      <rect x="20" y="40" width="400" height="260" rx="8"/>
+      <rect x="520" y="40" width="360" height="260" rx="8"/>
+    </g>
+    <!-- 50 stick figures -->
+    <g id="people" class="sk" stroke="#1e1e1e" stroke-width="2" fill="none">
+      <script type="text/plain"></script>
+    </g>
+    <text x="220" y="340" font-size="26" text-anchor="middle">2019: a company of 50</text>
+    <!-- one person + laptop -->
+    <g class="sk" stroke="#1971c2" stroke-width="3" fill="none">
+      <circle cx="700" cy="120" r="22"/>
+      <line x1="700" y1="142" x2="700" y2="210"/>
+      <line x1="700" y1="165" x2="660" y2="195"/>
+      <line x1="700" y1="165" x2="740" y2="195"/>
+      <line x1="700" y1="210" x2="675" y2="260"/>
+      <line x1="700" y1="210" x2="725" y2="260"/>
+      <rect x="745" y="180" width="60" height="40" rx="3"/>
+      <line x1="740" y1="222" x2="810" y2="222"/>
+    </g>
+    <text x="700" y="340" font-size="26" text-anchor="middle" fill="#1971c2">today: one 19 year old + ai</text>
+    <text x="470" y="180" font-size="40" text-anchor="middle">=</text>
+  </svg>
+  <p class="frag gap">nobody has seen this before.</p>
+  <aside>with everything around you changing so rapidly, how do you adapt and plan strategically to get the outcomes you are searching for?</aside>
+</section>
+
+<!-- 7 explorer map -->
+<section class="slide">
+  <svg class="fig" viewBox="0 0 1000 560" width="1000">
+    <!-- parchment -->
+    <rect x="10" y="10" width="980" height="540" rx="6" fill="#fbf3dc" stroke="#b9a67a" stroke-width="3" class="sk"/>
+    <!-- detailed coastline left -->
+    <g class="sk" fill="#efe3bf" stroke="#6b5a3a" stroke-width="3">
+      <path d="M10 60 C 120 40, 170 120, 140 190 C 110 260, 230 280, 200 350 C 170 420, 260 470, 180 550 L 10 550 Z"/>
+    </g>
+    <!-- detailed coastline bottom right -->
+    <g class="sk" fill="#efe3bf" stroke="#6b5a3a" stroke-width="3">
+      <path d="M990 380 C 900 370, 860 430, 800 450 C 740 470, 760 540, 700 550 L 990 550 Z"/>
+    </g>
+    <!-- grid-ish lines on known land -->
+    <g class="sk" stroke="#6b5a3a" stroke-width="1.5" fill="none" opacity=".6">
+      <path d="M30 120 L 120 130"/><path d="M40 200 L 150 215"/><path d="M60 290 L 190 300"/><path d="M50 380 L 200 400"/><path d="M60 470 L 170 480"/>
+      <path d="M830 470 L 960 460"/><path d="M780 520 L 960 510"/>
+    </g>
+    <!-- labels on known land -->
+    <g font-size="20" fill="#5a4a2a">
+      <text x="30" y="110">school</text>
+      <text x="40" y="190">board exams</text>
+      <text x="40" y="280">a degree</text>
+      <text x="40" y="370">the job your</text><text x="40" y="395">parents get</text>
+      <text x="820" y="440">mba</text>
+      <text x="790" y="510">"something stable"</text>
+    </g>
+    <!-- compass rose -->
+    <g class="sk" stroke="#6b5a3a" stroke-width="2" fill="none" transform="translate(900 90)">
+      <circle r="34"/><path d="M0 -34 L 8 0 L 0 34 L -8 0 Z" fill="#6b5a3a"/><path d="M-34 0 L 0 8 L 34 0 L 0 -8 Z"/>
+      <text x="-6" y="-42" font-size="16" fill="#5a4a2a">N</text>
+    </g>
+    <!-- dragons -->
+    <text x="500" y="270" font-size="46" text-anchor="middle" fill="#8a6a3a" opacity=".85" transform="rotate(-6 500 270)">here be dragons</text>
+    <g class="sk" stroke="#8a6a3a" stroke-width="2" fill="none" opacity=".7">
+      <path d="M430 330 q 20 -30 40 0 q 20 30 40 0 q 20 -30 40 0"/>
+      <path d="M470 320 l 15 -25 l 5 25"/>
+    </g>
+  </svg>
+  <p class="small gap">the coastline is drawn in detail. the middle is blank.</p>
+  <aside>old explorers' maps. the coastline = the stuff adults understand. the interior = blank, "here be dragons". you're being handed that map. hint: and btw you can redraw the frame itself too (callback at the end).</aside>
+</section>
+
+<!-- 8 compass -->
+<section class="slide">
+  <h2>if the map is blank, what do you actually own?</h2>
+  <h1 class="frag gap2 muted" style="color:var(--muted);text-decoration:line-through">a route</h1>
+  <h1 class="frag blue">a compass.</h1>
+  <p class="frag gap small">and legs that work on any terrain. that's the next 50 min.</p>
+  <aside>not a route. skills that work anywhere + ability to adapt fast. this is the thesis.</aside>
+</section>
+
+<!-- 9 GAME -->
+<section class="slide game" data-game>
+  <p class="label">₹ ROUND</p>
+  <h2 class="gap">give me one thing that exists today that your parents could NOT have planned for when they were your age. and how does that change things?</h2>
+  <aside>game round 1. w if paid, r if rollover.</aside>
+</section>
+
+<!-- 10 value atom -->
+<section class="slide">
+  <p class="small">entrepreneurship, stripped to the atom</p>
+  <h1 class="gap">create value for someone.<br><span class="frag">capture some of it.</span></h1>
+  <p class="frag gap2">everything else is decoration.</p>
+  <aside>funding, startups, business plans, linkedin = decoration. value is the unit. if you can create value you're chilling regardless of the market.</aside>
+</section>
+
+<!-- 11 drake meme -->
+<section class="slide">
+  <div class="meme">
+    <img src="assets/drake.jpg" alt="">
+    <div class="cap" style="left:52%;top:14%;width:44%">a startup name, a logo, a pitch deck, a linkedin post about the journey</div>
+    <div class="cap" style="left:52%;top:66%;width:44%">one thing. one person. who actually paid.</div>
+  </div>
+  <aside>the drake. don't explain it, let it sit for 3 seconds and move on.</aside>
+</section>
+
+<!-- 12 baker -->
+<section class="slide">
+  <svg class="fig" viewBox="0 0 520 220" width="420">
+    <g class="sk" fill="#ffd8a8" stroke="#b05a1c" stroke-width="3">
+      <path d="M60 150 C 40 100, 120 50, 200 70 C 260 40, 360 50, 420 90 C 480 110, 470 170, 420 175 L 80 175 C 50 175, 40 165, 60 150 Z"/>
+    </g>
+    <g class="sk" stroke="#b05a1c" stroke-width="2.5" fill="none">
+      <path d="M150 90 l 30 40"/><path d="M230 75 l 30 40"/><path d="M310 75 l 30 40"/>
+    </g>
+  </svg>
+  <h2 class="gap">if you can bake bread people actually want, you eat.</h2>
+  <p class="frag gap small">recession, elections, ai, whatever. the skill is the asset, not the shop.</p>
+  <aside>value creation is the thing that survives any market condition.</aside>
+</section>
+
+<!-- 13 specialist vs generalist -->
+<section class="slide">
+  <svg class="fig" viewBox="0 0 900 360" width="900">
+    <g class="sk" stroke="#1e1e1e" stroke-width="2.5" fill="none">
+      <line x1="40" y1="300" x2="860" y2="300"/>
+    </g>
+    <!-- specialists: tall thin -->
+    <g class="sk" fill="#d0ebff" stroke="#1971c2" stroke-width="2.5">
+      <rect x="80" y="60" width="40" height="240"/>
+      <rect x="160" y="60" width="40" height="240"/>
+      <rect x="240" y="60" width="40" height="240"/>
+    </g>
+    <g font-size="18" text-anchor="middle" fill="#1971c2">
+      <text x="100" y="330">cs</text><text x="180" y="330">law</text><text x="260" y="330">accounts</text>
+    </g>
+    <text x="180" y="40" font-size="22" text-anchor="middle">one deep skill</text>
+    <!-- generalist: wide, goes deep in spots -->
+    <g class="sk" fill="#ffec99" stroke="#f08c00" stroke-width="2.5">
+      <rect x="480" y="220" width="380" height="80"/>
+      <rect x="520" y="90" width="40" height="130"/>
+      <rect x="700" y="130" width="40" height="90"/>
+    </g>
+    <text x="670" y="40" font-size="22" text-anchor="middle" fill="#f08c00">entrepreneur</text>
+    <text x="670" y="330" font-size="18" text-anchor="middle" fill="#f08c00">wide. goes deep where the problem needs it.</text>
+  </svg>
+  <h3 class="gap">so how do you create value?</h3>
+  <p class="frag gap">the specialist route is looking less and less certain.</p>
+  <p class="frag">"entrepreneur" is a multi-hyphenate job by definition. you are an amalgamation of a 100 different roles.</p>
+  <aside>what has worked in the past isnt working as well anymore... why? you're already 1 step ahead. but choosing the subject doesn't equate to success.</aside>
+</section>
+
+<!-- 14 GAME -->
+<section class="slide game" data-game>
+  <p class="label">₹ ROUND</p>
+  <h2 class="gap">what kind of skills would an entrepreneur have to learn and master? answer not accepted without a clear why.</h2>
+</section>
+
+<!-- 19 THE MAP -->
+<section class="slide">
+  <svg class="fig" viewBox="0 0 1100 600" width="1100" id="themap">
+    <!-- regions -->
+    <g class="sk" stroke-width="3">
+      <path id="r-internal" d="M40 120 C 60 40, 330 30, 380 110 C 420 180, 400 330, 350 440 C 300 540, 80 540, 50 440 C 20 340, 20 220, 40 120 Z" fill="#d0ebff" stroke="#1971c2"/>
+      <path id="r-exec" d="M420 150 C 470 90, 650 100, 690 170 C 720 240, 700 320, 640 350 C 560 390, 430 360, 410 290 C 395 240, 400 190, 420 150 Z" fill="#d3f9d8" stroke="#2f9e44"/>
+      <path id="r-demand" d="M730 60 C 800 20, 1040 40, 1060 130 C 1075 210, 1000 270, 900 280 C 800 290, 720 240, 710 170 C 705 130, 710 90, 730 60 Z" fill="#ffec99" stroke="#f08c00"/>
+      <path id="r-lev" d="M470 400 C 520 360, 900 320, 1040 360 C 1090 400, 1080 520, 1000 560 C 900 590, 560 590, 480 540 C 440 500, 440 440, 470 400 Z" fill="#eebefa" stroke="#9c36b5"/>
+    </g>
+    <!-- region labels -->
+    <g font-size="30" text-anchor="middle" style="letter-spacing:3px">
+      <text x="210" y="105" fill="#1971c2">INTERNAL</text>
+      <text x="555" y="150" fill="#2f9e44">EXECUTION</text>
+      <text x="890" y="95" fill="#f08c00">DEMAND</text>
+      <text x="760" y="400" fill="#9c36b5">LEVERAGE</text>
+    </g>
+    <g font-size="16" text-anchor="middle" fill="#7a7a72">
+      <text x="210" y="128">you</text>
+      <text x="555" y="172">the loop</text>
+      <text x="890" y="118">people wanting the thing</text>
+      <text x="760" y="422">multiplying yourself</text>
+    </g>
+    <!-- dots + labels -->
+    <g font-size="19" class="dots">
+      <g fill="#1971c2">
+        <circle cx="110" cy="190" r="7"/><text x="125" y="196">first principles</text>
+        <circle cx="90" cy="250" r="7"/><text x="105" y="256">removing limiting beliefs</text>
+        <circle cx="120" cy="310" r="7"/><text x="135" y="316">constant learning</text>
+        <circle cx="100" cy="370" r="7"/><text x="115" y="376">high agency</text>
+        <circle cx="130" cy="430" r="7"/><text x="145" y="436">truth seeking</text>
+        <circle cx="125" cy="490" r="7"/><text x="140" y="496">nervous system mastery</text>
+      </g>
+      <g fill="#2f9e44">
+        <circle cx="450" cy="220" r="7"/><text x="465" y="226">experimentation loop</text>
+        <circle cx="470" cy="275" r="7"/><text x="485" y="281">decision making</text>
+        <circle cx="450" cy="330" r="7"/><text x="465" y="336">sensemaking</text>
+      </g>
+      <g fill="#f08c00">
+        <circle cx="770" cy="160" r="7"/><text x="785" y="166">aura</text>
+        <circle cx="770" cy="205" r="7"/><text x="785" y="211">distribution</text>
+        <circle cx="770" cy="250" r="7"/><text x="785" y="256">attention</text>
+      </g>
+      <g fill="#9c36b5">
+        <circle cx="520" cy="470" r="7"/><text x="535" y="476">delegating</text>
+        <circle cx="520" cy="520" r="7"/><text x="535" y="526">systems</text>
+        <circle cx="800" cy="470" r="7"/><text x="815" y="476">capital allocation</text>
+        <circle cx="800" cy="520" r="7"/><text x="815" y="526">talent</text>
+      </g>
+    </g>
+  </svg>
+  <p class="small">works in any industry, any economy, any decade.</p>
+  <aside>this is the map of the skills and traits that when you understand and master, will lead you to success in uncertain environments.</aside>
+</section>
+
+<!-- 20 INTERNAL -->
+<section class="slide left">
+  <h2 class="blue" style="letter-spacing:3px">INTERNAL</h2>
+  <p class="small">first principles · limiting beliefs · constant learning · high agency · truth seeking · nervous system</p>
+  <h3 class="gap2">before you have a team, a product, or money,<br>you have a brain and a body.</h3>
+  <h3 class="frag gap">if those are broken, nothing downstream works.</h3>
+  <aside>everything starts here. touch on high agency + first principles next.</aside>
+</section>
+
+<!-- 21 high agency -->
+<section class="slide">
+  <p class="small blue">high agency</p>
+  <svg class="fig gap" viewBox="0 0 900 340" width="800">
+    <!-- wall + door + window -->
+    <g class="sk" fill="none" stroke="#1e1e1e" stroke-width="3">
+      <rect x="340" y="40" width="390" height="280" fill="#f3efe3"/>
+      <rect x="400" y="140" width="100" height="180" fill="#d9c7a0"/>
+      <circle cx="485" cy="235" r="5" fill="#1e1e1e"/>
+      <rect x="590" y="70" width="110" height="90" fill="#d0ebff"/>
+      <line x1="645" y1="70" x2="645" y2="160"/><line x1="590" y1="115" x2="700" y2="115"/>
+    </g>
+    <!-- waiter -->
+    <g class="sk" stroke="#e03131" stroke-width="3" fill="none" transform="translate(250 240)">
+      <circle r="14"/><line y1="14" y2="50"/><line x1="0" y1="26" x2="-18" y2="46"/><line x1="0" y1="26" x2="18" y2="46"/><line y1="50" x2="-12" y2="80"/><line y1="50" x2="12" y2="80"/>
+    </g>
+    <text x="250" y="200" font-size="18" fill="#e03131" text-anchor="middle">"nobody gave me the key"</text>
+    <!-- climber -->
+    <g class="sk" stroke="#2f9e44" stroke-width="3" fill="none" transform="translate(760 160)">
+      <circle r="14"/><line y1="14" y2="50"/><line x1="0" y1="26" x2="-30" y2="0"/><line x1="0" y1="26" x2="18" y2="40"/><line y1="50" x2="-20" y2="70"/><line y1="50" x2="14" y2="80"/>
+    </g>
+    <text x="780" y="260" font-size="18" fill="#2f9e44" text-anchor="middle">"nobody stopped me"</text>
+  </svg>
+  <h3 class="frag gap">same locked door. one waits for the key. one checks the window.</h3>
+  <aside>the difference between "nobody taught me" and "nobody stopped me".</aside>
+</section>
+
+<!-- 22 first principles -->
+<section class="slide">
+  <p class="small blue">first principles</p>
+  <div class="grid2 gap">
+    <div class="box" style="text-align:left">
+      <p class="small">recipe</p>
+      <p>2 cups flour<br>1 egg<br>bake 20 min</p>
+    </div>
+    <div class="box blue fill-blue" style="text-align:left">
+      <p class="small">why it works</p>
+      <p>flour = structure<br>egg = binding<br>heat = sets it</p>
+    </div>
+  </div>
+  <h3 class="frag gap2">recipe followers die the day the ingredient changes.</h3>
+  <aside>knowing the recipe vs knowing why the recipe works. when the environment shifts, only the second one survives.</aside>
+</section>
+
+<!-- 23 EXECUTION -->
+<section class="slide left">
+  <h2 class="green" style="letter-spacing:3px">EXECUTION</h2>
+  <p class="small">experimentation loop · decision making · sensemaking</p>
+  <h3 class="gap2">where thinking becomes doing.<br>the loop from earlier lives here.</h3>
+  <div class="frag gap2">
+    <p class="small green">sensemaking</p>
+    <h3>the world throws 1000 signals at you. most are noise.</h3>
+    <h3 class="gap">a goalkeeper facing a penalty doesn't watch everything.<br>they watch the hips.</h3>
+  </div>
+  <aside>touch on sensemaking with the goalkeeper. knowing which signal matters.</aside>
+</section>
+
+<!-- 24 DEMAND -->
+<section class="slide left">
+  <h2 class="orange" style="letter-spacing:3px">DEMAND</h2>
+  <p class="small">aura · distribution · attention</p>
+  <h3 class="gap2">a thing nobody knows about<br>is identical to a thing that doesn't exist.</h3>
+  <aside>you can build the best thing in the world and nobody will know.</aside>
+</section>
+
+<!-- 25 distribution -->
+<section class="slide">
+  <p class="small orange">distribution</p>
+  <div class="grid2 gap">
+    <div class="col">
+      <svg class="fig" viewBox="0 0 220 160" width="220">
+        <g class="sk" fill="#eee" stroke="#1e1e1e" stroke-width="2.5"><rect x="30" y="40" width="160" height="90" rx="6"/><circle cx="60" cy="85" r="8" fill="#1e1e1e"/></g>
+        <text x="110" y="150" font-size="14" text-anchor="middle">a hard drive</text>
+      </svg>
+      <h3>the best song ever written</h3>
+      <p class="small">sitting on a hard drive</p>
+    </div>
+    <div class="col">
+      <svg class="fig" viewBox="0 0 220 160" width="220">
+        <g class="sk" fill="#d3f9d8" stroke="#2f9e44" stroke-width="2.5"><rect x="30" y="20" width="160" height="120" rx="6"/><line x1="50" y1="50" x2="170" y2="50"/><line x1="50" y1="80" x2="170" y2="80"/><line x1="50" y1="110" x2="170" y2="110"/></g>
+        <text x="110" y="155" font-size="14" text-anchor="middle" fill="#2f9e44">a playlist with 2M followers</text>
+      </svg>
+      <h3>a mid song</h3>
+      <p class="small">on the playlist</p>
+    </div>
+  </div>
+  <h3 class="frag gap2">who wins?</h3>
+  <aside>distribution beats quality more often than anyone wants to admit.</aside>
+</section>
+
+<!-- 26 aura -->
+<section class="slide">
+  <p class="small orange">aura</p>
+  <h2 class="gap">the thing that makes people want to work with you<br>before you've said anything.</h2>
+  <p class="frag gap2">sounds like a meme. it's real. it compounds.</p>
+</section>
+
+<!-- 27 LEVERAGE -->
+<section class="slide">
+  <h2 class="purple" style="letter-spacing:3px">LEVERAGE</h2>
+  <p class="small">delegating · capital allocation · talent · systems</p>
+  <svg class="fig gap" viewBox="0 -60 900 310" width="760">
+    <g class="sk" stroke="#1e1e1e" stroke-width="3" fill="none">
+      <line x1="80" y1="200" x2="820" y2="90"/>
+      <path d="M560 232 l 30 -50 l 30 50 z" fill="#9c36b5" stroke="#9c36b5"/>
+    </g>
+    <g class="sk" fill="#eebefa" stroke="#9c36b5" stroke-width="2.5">
+      <rect x="110" y="140" width="40" height="40"/>
+    </g>
+    <g class="sk" fill="#eebefa" stroke="#9c36b5" stroke-width="2.5">
+      <rect x="690" y="-40" width="130" height="130"/>
+    </g>
+    <text x="130" y="128" font-size="18" text-anchor="middle">you</text>
+    <text x="755" y="32" font-size="20" text-anchor="middle" fill="#9c36b5">output</text>
+  </svg>
+  <h3 class="frag">everything above this is you, alone.<br>this is how one person becomes 10, 100, 1000.</h3>
+  <p class="frag gap small">money is a lever. people are a lever. a system that runs without you is the biggest lever.</p>
+  <aside>same push, 10x output. touch on capital allocation next.</aside>
+</section>
+
+<!-- 28 capital allocation -->
+<section class="slide">
+  <p class="small purple">capital allocation</p>
+  <h1 class="gap">every rupee and every hour<br>is a bet.</h1>
+  <p class="frag gap2">the skill isn't having money. it's knowing where to put it.</p>
+</section>
+
+<!-- 29 GAME x2 -->
+<section class="slide game" data-game>
+  <p class="label">₹ ROUND</p>
+  <h2 class="gap">pick any one dot on the map.<br>name a person you know who's unusually good at it.</h2>
+  <h2 class="frag gap2">which of the 4 regions are YOU weakest in? why?</h2>
+  <aside>two rounds back to back. press → for the second question.</aside>
+</section>
+
+<!-- 30 EXERCISE 1 -->
+<section class="slide">
+  <p class="small">exercise</p>
+  <svg class="fig gap" viewBox="0 0 520 300" width="440">
+    <g class="sk" fill="none" stroke="#1e1e1e" stroke-width="3">
+      <rect x="80" y="130" width="360" height="120" fill="#fff3bf"/>
+      <path d="M60 130 L 260 50 L 460 130 Z" fill="#ffd8a8"/>
+      <line x1="100" y1="250" x2="100" y2="290"/><line x1="420" y1="250" x2="420" y2="290"/>
+      <rect x="150" y="180" width="36" height="30" rx="4" fill="#fff"/>
+      <path d="M186 188 q 14 7 0 16" fill="none"/>
+      <path d="M160 170 q 4 -8 0 -16" fill="none" opacity=".5"/><path d="M174 172 q 4 -8 0 -16" fill="none" opacity=".5"/>
+    </g>
+    <text x="260" y="105" font-size="26" text-anchor="middle">CHAI</text>
+    <text x="330" y="215" font-size="22" text-anchor="middle">₹500 / day</text>
+  </svg>
+  <h2 class="gap">there's a chai stall outside this school.<br>₹500 a day.</h2>
+  <h2 class="frag gap">you have ₹1000 and one weekend. what do you do?</h2>
+  <p class="frag gap small">every answer lives somewhere on the map. <span class="blue">internal</span> · <span class="green">execution</span> · <span class="orange">demand</span> · <span class="purple">leverage</span></p>
+  <aside>5 min. 3-4 kids answer. tag each answer live to a region: "that's a DEMAND move", "that's LEVERAGE", "that's throwing at the wall". no right answer. point = the map is real.</aside>
+</section>
+
+<!-- 31 levels intro -->
+<section class="slide">
+  <h1>it's a game with levels.</h1>
+  <h2 class="frag gap2 red">and at every level, the game changes.</h2>
+  <p class="frag gap small">the skill that got you here is not the skill that beats the next boss.</p>
+</section>
+
+<!-- 32 levels cards -->
+<section class="slide">
+  <div class="lvl">
+    <div class="box"><div class="n">LEVEL 1</div><div class="you">alone. side hustle.</div><div class="boss">nobody cares. get one person to pay you anything.</div></div>
+    <div class="box frag"><div class="n">LEVEL 2</div><div class="you">first real customers</div><div class="boss">make it repeatable. prove it wasn't a fluke.</div></div>
+    <div class="box frag"><div class="n">LEVEL 3</div><div class="you">first hire</div><div class="boss">you can't do everything. your ability to explain is now the bottleneck.</div></div>
+    <div class="box frag"><div class="n">LEVEL 4</div><div class="you">a team</div><div class="boss">culture. communication. people problems.</div></div>
+    <div class="box frag"><div class="n">LEVEL 5</div><div class="you">capital + scale</div><div class="boss">allocation. every decision is a bet with real money.</div></div>
+    <div class="box frag"><div class="n">LEVEL 6</div><div class="you">it runs without you</div><div class="boss">letting go. YOU are the bottleneck now.</div></div>
+  </div>
+  <aside>reveal one by one. 7 min for levels total.</aside>
+</section>
+
+<!-- 33 infinite game -->
+<section class="slide">
+  <svg class="fig" viewBox="0 0 900 320" width="900">
+    <!-- valorant ladder -->
+    <g font-size="16" fill="#7a7a72">
+      <text x="60" y="300">iron</text><text x="60" y="260">bronze</text><text x="60" y="220">silver</text><text x="60" y="180">gold</text><text x="60" y="140">plat</text><text x="60" y="100">diamond</text><text x="60" y="60">immortal</text>
+    </g>
+    <text x="60" y="26" font-size="20" fill="#e03131">radiant</text>
+    <g class="sk" stroke="#e03131" stroke-width="3" fill="none"><line x1="150" y1="20" x2="330" y2="20"/><line x1="150" y1="300" x2="150" y2="20"/></g>
+    <text x="240" y="12" font-size="14" text-anchor="middle" fill="#e03131">cap</text>
+    <!-- infinite line -->
+    <g class="sk" stroke="#2f9e44" stroke-width="3" fill="none">
+      <path d="M460 300 C 560 280, 620 220, 700 160 C 760 110, 820 60, 900 20"/>
+      <path d="M880 40 l 20 -20 l -20 -4"/>
+    </g>
+    <text x="700" y="290" font-size="22" fill="#2f9e44">this one doesn't stop</text>
+  </svg>
+  <h3 class="frag gap">valorant caps at radiant. this doesn't cap.</h3>
+  <h3 class="frag gap">you don't play to win. you play to keep playing.</h3>
+  <aside>infinite game. continuous improvement with no ceiling.</aside>
+</section>
+
+<!-- 34 freedom -->
+<section class="slide left">
+  <h2>you choose who you play with.</h2>
+  <h2 class="frag">you choose what problems you play with.</h2>
+  <h2 class="frag">you choose what you build.</h2>
+  <div class="frag gap2">
+    <p class="small">the only requirements</p>
+    <ul>
+      <li>know the prerequisites</li>
+      <li>understand the problem deeply</li>
+      <li>work from first principles</li>
+      <li class="red">don't die to a failure mode</li>
+    </ul>
+  </div>
+  <aside>the freedom part. last bullet is the bridge to failure modes.</aside>
+</section>
+
+<!-- 35 GAME -->
+<section class="slide game" data-game>
+  <p class="label">₹ ROUND</p>
+  <h2 class="gap">name a game where getting good at an early level actively hurts you later.</h2>
+</section>
+
+<!-- 36 failure intro -->
+<section class="slide">
+  <h1>if you just don't die,<br>you're ahead of most people.</h1>
+  <p class="frag gap2">there are so many ways to die that survival IS the strategy.</p>
+  <p class="frag gap">but don't be scared of it. failing is the fastest way to learn.<br><span class="hl">fail small and fast. not big and slow.</span></p>
+</section>
+
+<!-- 37 this is fine -->
+<section class="slide">
+  <p class="small red">failure mode 1 · losing touch with reality</p>
+  <div class="meme gap">
+    <img src="assets/thisisfine.jpg" alt="" style="width:min(80vw,1000px);max-width:none">
+    <div class="cap white" style="left:1%;width:48%;top:4%;font-size:clamp(16px,2vw,30px)">month 11.<br>zero customers.</div>
+    <div class="cap white" style="left:0;right:0;bottom:4%;font-size:clamp(16px,2vw,30px)">"it just needs one more feature"</div>
+  </div>
+  <aside>technical people build build build and never talk to a customer. then they die. say: "i've done this." + your one-liner story. highest-trust moment in the talk.</aside>
+</section>
+
+<!-- 38 wrong syllabus -->
+<section class="slide">
+  <svg class="fig" viewBox="0 0 900 320" width="800">
+    <!-- stack of books -->
+    <g class="sk" stroke="#1e1e1e" stroke-width="2.5">
+      <rect x="120" y="230" width="200" height="34" fill="#d0ebff"/>
+      <rect x="130" y="196" width="200" height="34" fill="#d3f9d8"/>
+      <rect x="115" y="162" width="200" height="34" fill="#ffec99"/>
+      <rect x="125" y="128" width="200" height="34" fill="#eebefa"/>
+      <rect x="120" y="94" width="200" height="34" fill="#ffe3e3"/>
+    </g>
+    <g font-size="15" fill="#1e1e1e">
+      <text x="140" y="116">physics vol 1</text><text x="145" y="150">physics vol 2</text><text x="135" y="184">physics vol 3</text><text x="150" y="218">physics notes</text><text x="140" y="252">more physics</text>
+    </g>
+    <text x="220" y="295" font-size="18" text-anchor="middle">a whole year</text>
+    <!-- exam paper -->
+    <g class="sk" fill="#fff" stroke="#e03131" stroke-width="3"><rect x="560" y="80" width="220" height="200"/></g>
+    <g font-size="16" fill="#e03131">
+      <text x="580" y="115">FINAL EXAM</text>
+      <text x="580" y="150" font-size="26">CHEMISTRY</text>
+      <text x="580" y="185">q1. ___________</text><text x="580" y="210">q2. ___________</text><text x="580" y="235">q3. ___________</text>
+    </g>
+    <text x="440" y="190" font-size="40" text-anchor="middle">→</text>
+  </svg>
+  <h3 class="frag gap">you worked harder than anyone. the exam was a different subject.</h3>
+  <h3 class="frag gap red">the customer writes the syllabus. not you.</h3>
+</section>
+
+<!-- 39 tilt -->
+<section class="slide">
+  <p class="small red">failure mode 2 · tilt</p>
+  <div class="meme gap">
+    <img src="assets/clown.jpg" alt="" style="max-height:66vh">
+    <div class="cap" style="left:3%;top:9%;width:54%;font-size:clamp(14px,1.8vw,26px)">lose two rounds</div>
+    <div class="cap" style="left:3%;top:34%;width:54%;font-size:clamp(14px,1.8vw,26px)">blame the team</div>
+    <div class="cap" style="left:3%;top:59%;width:54%;font-size:clamp(14px,1.8vw,26px)">rush b alone</div>
+    <div class="cap" style="left:3%;top:84%;width:54%;font-size:clamp(14px,1.8vw,26px)">uninstall</div>
+  </div>
+  <p class="frag gap">founders do this too. the round just lasts 6 months and it's your money.</p>
+  <aside>pressure on a founder is enormous. if your nervous system can't hold uncertainty you fumble at the exact moment it matters. nervous system mastery = anti-tilt training.</aside>
+</section>
+
+<!-- 40 two buttons -->
+<section class="slide">
+  <p class="small red">failure mode 3 · picking the wrong people</p>
+  <div class="meme gap">
+    <img src="assets/twobuttons.jpg" alt="">
+    <div class="cap" style="left:8%;top:9%;width:27%;font-size:clamp(10px,1.05vw,15px);transform:rotate(-9deg)">cofounder: my best friend</div>
+    <div class="cap" style="left:47%;top:5.5%;width:30%;font-size:clamp(10px,1.05vw,15px);transform:rotate(-9deg)">cofounder: the one who shows up at 2am</div>
+  </div>
+  <aside>the people you work with ARE your culture. cofounder failure is a top killer.</aside>
+</section>
+
+<!-- 41 group project -->
+<section class="slide">
+  <h2>you've all done a group project.</h2>
+  <h2 class="frag gap">now make it 5 years long<br>and put your savings in it.</h2>
+  <p class="frag gap2 hl">date before you marry. build something small together first.</p>
+</section>
+
+<!-- 42 d + e -->
+<section class="slide left">
+  <p class="small red">also, quickly</p>
+  <ul class="gap">
+    <li class="frag"><b>running out of fuel.</b> money, energy, or motivation. the idea wasn't bad, you just couldn't stay in long enough to find out.</li>
+    <li class="frag"><b>building a vitamin, not a painkiller.</b> nobody runs to the shop at 11pm for a vitamin.</li>
+  </ul>
+</section>
+
+<!-- 43 GAME -->
+<section class="slide game" data-game>
+  <p class="label">₹ ROUND</p>
+  <h2 class="gap">which of these are YOU most likely to die to?<br>be honest.</h2>
+</section>
+
+<!-- 44 EXERCISE 2 -->
+<section class="slide">
+  <p class="small">exercise · boss fight sim</p>
+  <div class="row gap2">
+    <div class="box"><h1>10</h1><p class="small">orders a day. you do everything.</p></div>
+    <h1>→</h1>
+    <div class="box red fill-red"><h1>100</h1><p class="small">tomorrow.</p></div>
+  </div>
+  <h2 class="frag gap2">what breaks first?</h2>
+  <aside>4 min. kids list things. tag each: "that's a LEVERAGE problem", "that's systems", "that's you tilting". lands: levels change the game.</aside>
+</section>
+
+<!-- 45 cheat code -->
+<section class="slide">
+  <div class="box purple fill-purple" style="font-family:ui-monospace,Menlo,monospace;text-align:left;font-size:clamp(16px,2vw,26px)">
+    <div>&gt; SAVE FILE FOUND</div>
+    <div>&gt; LEVEL 5 · TEAM · CAPITAL · CUSTOMERS</div>
+    <div>&gt; LOAD? [Y/N]</div>
+  </div>
+  <h2 class="frag gap2">some of you are inheriting a level 5 game.<br>that's a cheat code.</h2>
+  <h2 class="frag gap">a cheat code is useless if you don't know how to play.</h2>
+  <p class="frag gap2 small">the business your parents built was built for a map that's now different.<br>the terrain changed. the compass didn't.</p>
+  <aside>for the family biz kids, no singling out. inheriting a thing vs inheriting a game you can keep playing.</aside>
+</section>
+
+<!-- 46 unsolicited -->
+<section class="slide">
+  <h1>time for some unsolicited advice.</h1>
+  <h2 class="frag gap2">quick check: who actually wants it?</h2>
+  <aside>hands up. then next slide.</aside>
+</section>
+
+<!-- 47 blank map -->
+<section class="slide">
+  <svg class="fig" viewBox="0 0 1100 600" width="1100">
+    <g class="sk" stroke-width="3" fill="none" stroke="#c9c4b4" stroke-dasharray="10 8">
+      <path d="M40 120 C 60 40, 330 30, 380 110 C 420 180, 400 330, 350 440 C 300 540, 80 540, 50 440 C 20 340, 20 220, 40 120 Z"/>
+      <path d="M420 150 C 470 90, 650 100, 690 170 C 720 240, 700 320, 640 350 C 560 390, 430 360, 410 290 C 395 240, 400 190, 420 150 Z"/>
+      <path d="M730 60 C 800 20, 1040 40, 1060 130 C 1075 210, 1000 270, 900 280 C 800 290, 720 240, 710 170 C 705 130, 710 90, 730 60 Z"/>
+      <path d="M470 400 C 520 360, 900 320, 1040 360 C 1090 400, 1080 520, 1000 560 C 900 590, 560 590, 480 540 C 440 500, 440 440, 470 400 Z"/>
+    </g>
+  </svg>
+  <aside>the same map, empty. let it sit.</aside>
+</section>
+
+<!-- 48 you decide -->
+<section class="slide">
+  <h2>i'd be doing you a disservice if i pretended<br>the same advice works for all of you.</h2>
+  <h2 class="frag gap2">you're the only one qualified to decide what goes here.</h2>
+  <h2 class="frag gap red">don't blindly follow anyone.<br>including me. including your parents. including whatever's trending.</h2>
+</section>
+
+<!-- 49 follow -->
+<section class="slide">
+  <h1>follow the deepest,<br>most authentic part of yourself.</h1>
+  <h2 class="frag gap2">it already knows what's right for you.<br>this hour just gave it a vocabulary.</h2>
+  <p class="frag gap2 small">and the frame itself? you can change that too.</p>
+  <aside>callback to the explorer map hint. then end. no qr, no reading list, no follow me. just stop.</aside>
+</section>
+
+<!-- 50 end -->
+<section class="slide">
+  <h2 class="small">that's it.</h2>
+</section>
+
+</div>
+
+<div class="bounty box orange" id="bounty">₹<span id="bval">100</span></div>
+<div class="hud"><span id="hint">→ next · ← back · n notes · ? help</span><span id="count"></span></div>
+<div class="notes" id="notes"><h4>NOTES</h4><div id="notesbody"></div></div>
+<div class="help box" id="help">
+→ / space / click &nbsp; next<br>
+← &nbsp; back<br>
+n &nbsp; speaker notes<br>
+w &nbsp; bounty paid (reset to ₹100)<br>
+r &nbsp; nobody got it (rollover +₹100)<br>
+f &nbsp; fullscreen<br>
+home / end &nbsp; first / last<br>
+? &nbsp; this
+</div>
+
+<script>
+// 50 stick figures for the 2015 box
+(function(){
+  const g=document.getElementById('people'); if(!g) return;
+  let s='';
+  for(let r=0;r<5;r++)for(let c=0;c<10;c++){
+    const x=50+c*36, y=70+r*48;
+    s+=`<circle cx="${x}" cy="${y}" r="7"/><line x1="${x}" y1="${y+7}" x2="${x}" y2="${y+28}"/><line x1="${x}" y1="${y+14}" x2="${x-9}" y2="${y+24}"/><line x1="${x}" y1="${y+14}" x2="${x+9}" y2="${y+24}"/><line x1="${x}" y1="${y+28}" x2="${x-7}" y2="${y+40}"/><line x1="${x}" y1="${y+28}" x2="${x+7}" y2="${y+40}"/>`;
+  }
+  g.innerHTML=s;
+})();
+
+const slides=[...document.querySelectorAll('.slide')];
+const count=document.getElementById('count');
+const notes=document.getElementById('notes'), notesbody=document.getElementById('notesbody');
+const bountyEl=document.getElementById('bounty'), bval=document.getElementById('bval');
+const help=document.getElementById('help');
+let i=0, bounty=100;
+
+function show(n){
+  i=Math.max(0,Math.min(slides.length-1,n));
+  slides.forEach((s,k)=>s.classList.toggle('active',k===i));
+  location.hash=i;
+  count.textContent=(i+1)+' / '+slides.length;
+  const a=slides[i].querySelector('aside');
+  notesbody.textContent=a?a.textContent:'(no notes)';
+  bountyEl.classList.toggle('show',slides[i].hasAttribute('data-game'));
+}
+function frags(){return [...slides[i].querySelectorAll('.frag')]}
+function next(){
+  const f=frags().find(x=>!x.classList.contains('on'));
+  if(f){f.classList.add('on');return}
+  if(i<slides.length-1){show(i+1)}
+}
+function prev(){
+  const on=frags().filter(x=>x.classList.contains('on'));
+  if(on.length){on[on.length-1].classList.remove('on');return}
+  if(i>0){show(i-1);frags().forEach(x=>x.classList.add('on'))}
+}
+function setBounty(v,flash){bounty=v;bval.textContent=v;if(flash){bountyEl.classList.remove('flash');void bountyEl.offsetWidth;bountyEl.classList.add('flash')}}
+
+document.addEventListener('keydown',e=>{
+  if(e.metaKey||e.ctrlKey||e.altKey)return;
+  switch(e.key){
+    case 'ArrowRight':case ' ':case 'ArrowDown':case 'PageDown':e.preventDefault();next();break;
+    case 'ArrowLeft':case 'ArrowUp':case 'PageUp':e.preventDefault();prev();break;
+    case 'Home':show(0);break;
+    case 'End':show(slides.length-1);break;
+    case 'n':notes.classList.toggle('open');break;
+    case 'w':setBounty(100,true);break;
+    case 'r':setBounty(bounty+100,true);break;
+    case 'f':document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();break;
+    case '?':help.classList.toggle('open');break;
+    case 'Escape':help.classList.remove('open');notes.classList.remove('open');break;
+  }
+});
+document.getElementById('deck').addEventListener('click',e=>{ if(!notes.classList.contains('open')) next(); });
+
+show(parseInt(location.hash.slice(1))||0);
+</script>
+</body>
+</html>
