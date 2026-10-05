@@ -61,6 +61,20 @@ svg text{font-family:"Excalifont","Comic Sans MS",cursive;fill:var(--ink)}
 .hud{position:fixed;left:0;right:0;bottom:0;padding:10px 18px;display:flex;justify-content:space-between;align-items:flex-end;pointer-events:none;font-size:14px;color:var(--muted)}
 .bounty{position:fixed;top:18px;right:22px;font-size:clamp(18px,2vw,28px);padding:.3em .8em;opacity:0;transition:opacity .2s;background:var(--orange-soft)}
 .bounty.show{opacity:1}
+.topic{position:fixed;top:16px;left:22px;font-size:15px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;pointer-events:none;z-index:5}
+.topic.flip{animation:topicin .5s}
+@keyframes topicin{0%{opacity:0;transform:translateY(-6px)}100%{opacity:1;transform:none}}
+.mini{position:fixed;top:14px;right:22px;width:210px;background:#fff;border:2px solid #1e1e1e;border-radius:6px;padding:4px;cursor:pointer;display:none;z-index:7;box-shadow:0 4px 18px rgba(0,0,0,.12)}
+.mini svg{width:100%;height:auto;display:block}
+.mini .lw{width:1100px;transform-origin:top left;padding:6px}
+.mini .lw .frag{opacity:1;transform:none}
+.mini .lw .lvl{gap:20px}
+.mini .lw .box::before{filter:none}
+.mini .lh{overflow:hidden}
+.mini.show{display:block}
+.mini.big{top:50%;left:50%;right:auto;transform:translate(-50%,-50%);width:min(92vw,1150px);padding:12px;box-shadow:0 0 0 100vmax rgba(255,253,246,.88),0 8px 40px rgba(0,0,0,.15)}
+.mini .tag{position:absolute;bottom:-20px;right:0;font-size:12px;color:var(--muted);letter-spacing:1px}
+.mini.big .tag{display:none}
 .bounty.flash{animation:pop .4s}
 @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.25) rotate(-3deg)}100%{transform:scale(1)}}
 .notes{position:fixed;top:0;right:0;bottom:0;width:min(420px,38vw);background:#fff8e1;border-left:2px solid #e0d6b0;padding:22px;overflow:auto;transform:translateX(100%);transition:transform .2s;font-size:15px;line-height:1.5;color:#3a3a32;text-align:left;font-family:ui-monospace,Menlo,monospace;white-space:pre-wrap}
@@ -69,6 +83,16 @@ svg text{font-family:"Excalifont","Comic Sans MS",cursive;fill:var(--ink)}
 aside{display:none}
 .help{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;padding:24px 32px;font-size:16px;line-height:1.7;display:none;z-index:9;font-family:ui-monospace,Menlo,monospace;box-shadow:0 8px 40px rgba(0,0,0,.15)}
 .help.open{display:block}
+.idx{position:fixed;inset:0;background:#fffdf6;z-index:8;display:none;overflow:auto;padding:36px 48px}
+.idx.open{display:block}
+.idx ol{list-style:none;columns:3;column-gap:32px;font-size:15px;line-height:1.35;font-family:ui-monospace,Menlo,monospace}
+.idx li{break-inside:avoid;padding:3px 8px;cursor:pointer;border-radius:4px;color:#3a3a32;font-size:15px;line-height:1.35}
+.idx li::before{content:none}
+.idx li:hover{background:var(--orange-soft)}
+.idx li.cur{background:#ffec99;font-weight:bold}
+.idx li.g{color:var(--orange)}
+.idx li span{display:inline-block;width:2.4em;color:var(--muted)}
+.idx h4{font-family:ui-monospace,Menlo,monospace;font-size:13px;letter-spacing:1px;color:#8a7a3a;margin-bottom:14px}
 
 /* game slide */
 .game{background:var(--orange-soft)}
@@ -100,7 +124,7 @@ aside{display:none}
 <div class="deck" id="deck">
 
 <!-- 0 title -->
-<section class="slide">
+<section class="slide" data-topic="introduction">
   <h1>a map of a territory<br>the game of entrepreneurship</h1>
   <img class="gap" src="assets/mapfn.jpg" alt="" style="max-height:52vh;width:auto;border-radius:8px">
   <aside>effective use of time, share learnings, test understanding, go out w/ a better idea of the real world than before. keys: → next, n notes, w bounty paid, r rollover, f fullscreen, ? help.</aside>
@@ -138,7 +162,7 @@ aside{display:none}
 </section>
 
 <!-- 4 game rules -->
-<section class="slide game">
+<section class="slide game" data-topic="the game">
   <p class="label">THE GAME</p>
   <div class="box orange gap" style="background:#fff">
     <h2>₹100</h2>
@@ -150,7 +174,7 @@ aside{display:none}
 </section>
 
 <!-- 5 parents 10 years -->
-<section class="slide">
+<section class="slide" data-topic="reality check">
   <h1>uncertainty is at an all time high</h1>
   <h1 class="frag red gap">how do we move with this much fog of war?</h1>
   <aside>uncertainty point. the world has never been this uncertain bc tech is enabling things nobody has seen before.</aside>
@@ -241,8 +265,9 @@ aside{display:none}
 <!-- 9 GAME -->
 <section class="slide game" data-game>
   <p class="label">₹ ROUND</p>
-  <h2 class="gap">give me one thing that exists today that your parents could NOT have planned for when they were your age. and how does that change things?</h2>
-  <aside>game round 1. w if paid, r if rollover.</aside>
+  <h2 class="gap">you land in a new city where nobody knows you.<br>₹1,000 and a phone.<br>how do you earn your first ₹500?</h2>
+  <p class="frag gap small">who's paying you, and what are you doing for them?</p>
+  <aside>game round 1. w if paid, r if rollover. probe every answer with the follow-up. their answers become the examples for "create value for someone, capture some of it" next slide.</aside>
 </section>
 
 <!-- 10 value atom -->
@@ -316,7 +341,7 @@ aside{display:none}
 </section>
 
 <!-- 19 THE MAP -->
-<section class="slide">
+<section class="slide" id="themapslide" data-topic="the map">
   <svg class="fig" viewBox="0 0 1100 600" width="1100" id="themap">
     <!-- regions -->
     <g class="sk" stroke-width="3">
@@ -392,29 +417,54 @@ aside{display:none}
   <p class="small blue">first principles</p>
   <div class="grid2 gap">
     <div class="box" style="text-align:left">
-      <p class="small">recipe</p>
-      <p>2 cups flour<br>1 egg<br>bake 20 min</p>
+      <p class="small">everyone</p>
+      <p>a rocket costs $60M.<br>that's just what rockets cost.</p>
     </div>
-    <div class="box blue fill-blue" style="text-align:left">
-      <p class="small">why it works</p>
-      <p>flour = structure<br>egg = binding<br>heat = sets it</p>
+    <div class="box blue fill-blue frag" style="text-align:left">
+      <p class="small">musk</p>
+      <p>what's it made of?<br>aluminium, titanium, carbon fibre.<br>~2% of the price.</p>
     </div>
   </div>
-  <h3 class="frag gap2">recipe followers die the day the ingredient changes.</h3>
-  <aside>knowing the recipe vs knowing why the recipe works. when the environment shifts, only the second one survives.</aside>
+  <h3 class="frag gap2">the other 98% is how we chose to build it.</h3>
+  <aside>spacex. don't accept the price, ask what it's made of. rebuild the reasoning from the raw materials up. ask them: how much of any price is unavoidable?</aside>
 </section>
 
 <!-- 23 EXECUTION -->
 <section class="slide left">
   <h2 class="green" style="letter-spacing:3px">EXECUTION</h2>
   <p class="small">experimentation loop · decision making · sensemaking</p>
-  <h3 class="gap2">where thinking becomes doing.<br>the loop from earlier lives here.</h3>
+  <h3 class="gap2">where thinking becomes doing.</h3>
   <div class="frag gap2">
     <p class="small green">sensemaking</p>
     <h3>the world throws 1000 signals at you. most are noise.</h3>
     <h3 class="gap">a goalkeeper facing a penalty doesn't watch everything.<br>they watch the hips.</h3>
   </div>
   <aside>touch on sensemaking with the goalkeeper. knowing which signal matters.</aside>
+</section>
+
+<!-- 23b burbn -->
+<section class="slide left">
+  <p class="small green">experimentation loop</p>
+  <h3>2010. two guys build an app.<br>check in to places, tell friends what you're up to.</h3>
+  <h3 class="frag gap">months of work. it barely grows.</h3>
+  <h3 class="frag gap">one thing people keep doing anyway: posting photos.</h3>
+  <h3 class="frag gap hl">you built all this. they only want one feature. what now?</h3>
+  <h3 class="frag gap">they deleted everything else.</h3>
+  <h3 class="frag gap">a user: "my photos aren't good enough." they add filters.</h3>
+  <h2 class="frag gap green">instagram.</h2>
+  <aside>reveal line by line. STOP at the yellow question and let them guess. then after "they add filters" ask: what do you think this became? then reveal. compresses several decisions into one story, say so if asked.</aside>
+</section>
+
+<!-- 23c food stall -->
+<section class="slide left">
+  <p class="small green">sensemaking</p>
+  <h3 class="gap">school fest. you run a food stall.<br>people stop, read the menu, leave.</h3>
+  <h3 class="frag gap">your guess: too expensive.</h3>
+  <h3 class="frag gap2 hl">what happens if you cut prices right now?</h3>
+  <h3 class="frag gap2">instead you listen. "we'll miss the next event." the queue is 15 minutes.</h3>
+  <h3 class="frag gap">the problem was never the price. it was the wait.</h3>
+  <h3 class="frag gap">test: one grab-and-go item, same price. if it sells, you were right.</h3>
+  <aside>stop at the yellow question. let them answer: you lose money AND still don't know why they left. the signal was the wait, not the price. sensemaking = finding the real signal before you act. then test it cheaply.</aside>
 </section>
 
 <!-- 24 DEMAND -->
@@ -425,29 +475,23 @@ aside{display:none}
   <aside>you can build the best thing in the world and nobody will know.</aside>
 </section>
 
-<!-- 25 distribution -->
-<section class="slide">
+<!-- 25b water bottle -->
+<section class="slide left">
   <p class="small orange">distribution</p>
-  <div class="grid2 gap">
-    <div class="col">
-      <svg class="fig" viewBox="0 0 220 160" width="220">
-        <g class="sk" fill="#eee" stroke="#1e1e1e" stroke-width="2.5"><rect x="30" y="40" width="160" height="90" rx="6"/><circle cx="60" cy="85" r="8" fill="#1e1e1e"/></g>
-        <text x="110" y="150" font-size="14" text-anchor="middle">a hard drive</text>
-      </svg>
-      <h3>the best song ever written</h3>
-      <p class="small">sitting on a hard drive</p>
-    </div>
-    <div class="col">
-      <svg class="fig" viewBox="0 0 220 160" width="220">
-        <g class="sk" fill="#d3f9d8" stroke="#2f9e44" stroke-width="2.5"><rect x="30" y="20" width="160" height="120" rx="6"/><line x1="50" y1="50" x2="170" y2="50"/><line x1="50" y1="80" x2="170" y2="80"/><line x1="50" y1="110" x2="170" y2="110"/></g>
-        <text x="110" y="155" font-size="14" text-anchor="middle" fill="#2f9e44">a playlist with 2M followers</text>
-      </svg>
-      <h3>a mid song</h3>
-      <p class="small">on the playlist</p>
-    </div>
-  </div>
-  <h3 class="frag gap2">who wins?</h3>
-  <aside>distribution beats quality more often than anyone wants to admit.</aside>
+  <h3>same ₹20 water bottle.</h3>
+  <h3 class="frag gap">outside your house: nobody.</h3>
+  <h3 class="frag gap">outside chepauk as the crowd walks out: gone in 10 minutes.</h3>
+  <h3 class="frag gap2">the product didn't change. the access to thirsty people did.</h3>
+  <aside>distribution = access. same product, different place and time.</aside>
+</section>
+
+<!-- 25c fest tickets -->
+<section class="slide left">
+  <p class="small orange">distribution</p>
+  <h3>you're selling tickets to your school fest.</h3>
+  <h3 class="frag gap">you post the link to your 200 followers.</h3>
+  <h3 class="frag gap">or: one student in each nearby school drops it in their class group.</h3>
+  <aside>you don't need an audience. you need someone who already has one.</aside>
 </section>
 
 <!-- 26 aura -->
@@ -455,6 +499,16 @@ aside{display:none}
   <p class="small orange">aura</p>
   <h2 class="gap">the thing that makes people want to work with you<br>before you've said anything.</h2>
   <p class="frag gap2">sounds like a meme. it's real. it compounds.</p>
+</section>
+
+<!-- 26b mrbeast -->
+<section class="slide left">
+  <p class="small orange">aura</p>
+  <h3>mrbeast texts 50 of the biggest youtubers: "one video, be here on this date."</h3>
+  <h3 class="frag gap">they show up.</h3>
+  <h3 class="frag gap2 hl">same idea, but tanmay bhat invites them. who shows up?</h3>
+  <h3 class="frag gap2">nobody read a pitch. the name was the pitch.</h3>
+  <aside>2024, the 50 creators video. nobody needed convincing, his track record did it: they know the audience will be huge and the production worth their time. aura = your name opens the door before you explain the idea. stop at the yellow line.</aside>
 </section>
 
 <!-- 27 LEVERAGE -->
@@ -487,44 +541,48 @@ aside{display:none}
   <p class="frag gap2">the skill isn't having money. it's knowing where to put it.</p>
 </section>
 
-<!-- 29 GAME x2 -->
+<!-- 29 GAME -->
 <section class="slide game" data-game>
   <p class="label">₹ ROUND</p>
-  <h2 class="gap">pick any one dot on the map.<br>name a person you know who's unusually good at it.</h2>
-  <h2 class="frag gap2">which of the 4 regions are YOU weakest in? why?</h2>
-  <aside>two rounds back to back. press → for the second question.</aside>
+  <h2 class="gap">you have $50M.<br>buy a mega yacht, or put it into a brain-chip company.</h2>
+  <h2 class="frag gap2">which is the better play in this game? why?</h2>
+  <aside>capital allocation round. no right answer, push on the why. yacht = consumption, chip company = a bet that can compound or go to zero. what does each one let you do next?</aside>
 </section>
 
 <!-- 30 EXERCISE 1 -->
 <section class="slide">
-  <p class="small">exercise</p>
-  <svg class="fig gap" viewBox="0 0 520 300" width="440">
-    <g class="sk" fill="none" stroke="#1e1e1e" stroke-width="3">
-      <rect x="80" y="130" width="360" height="120" fill="#fff3bf"/>
-      <path d="M60 130 L 260 50 L 460 130 Z" fill="#ffd8a8"/>
-      <line x1="100" y1="250" x2="100" y2="290"/><line x1="420" y1="250" x2="420" y2="290"/>
-      <rect x="150" y="180" width="36" height="30" rx="4" fill="#fff"/>
-      <path d="M186 188 q 14 7 0 16" fill="none"/>
-      <path d="M160 170 q 4 -8 0 -16" fill="none" opacity=".5"/><path d="M174 172 q 4 -8 0 -16" fill="none" opacity=".5"/>
-    </g>
-    <text x="260" y="105" font-size="26" text-anchor="middle">CHAI</text>
-    <text x="330" y="215" font-size="22" text-anchor="middle">₹500 / day</text>
-  </svg>
-  <h2 class="gap">there's a chai stall outside this school.<br>₹500 a day.</h2>
-  <h2 class="frag gap">you have ₹1000 and one weekend. what do you do?</h2>
-  <p class="frag gap small">every answer lives somewhere on the map. <span class="blue">internal</span> · <span class="green">execution</span> · <span class="orange">demand</span> · <span class="purple">leverage</span></p>
-  <aside>5 min. 3-4 kids answer. tag each answer live to a region: "that's a DEMAND move", "that's LEVERAGE", "that's throwing at the wall". no right answer. point = the map is real.</aside>
+  <p class="small">exercise · pick two</p>
+  <h3>you're launching a clothing brand for your school. pick any two:</h3>
+  <div class="grid3 gap" style="font-size:clamp(14px,1.5vw,21px)">
+    <div class="box fill-orange" style="text-align:left"><b>a popular creator</b><br>wears your clothes</div>
+    <div class="box fill-purple" style="text-align:left"><b>a designer</b><br>joins your team</div>
+    <div class="box fill-green" style="text-align:left"><b>test samples</b><br>with 100 students before you produce</div>
+    <div class="box fill-purple" style="text-align:left"><b>₹20,000</b><br>cash</div>
+    <div class="box fill-orange" style="text-align:left"><b>shelf space</b><br>in shops near 5 schools</div>
+    <div class="box fill-blue" style="text-align:left"><b>a real founder</b><br>coaches you weekly</div>
+  </div>
+  <p class="frag gap small"><span class="blue">internal</span> · <span class="green">execution</span> · <span class="orange">demand</span> · <span class="purple">leverage</span></p>
+  <aside>2 min. go around, everyone picks two and says why. don't react yet. colors = where it sits on the map (reveal with →). most will grab creator + money or creator + shops.</aside>
+</section>
+
+<!-- 30b EXERCISE 1 twist -->
+<section class="slide">
+  <p class="small">exercise · 3 months later</p>
+  <h2>your first batch gets loads of attention.</h2>
+  <h2 class="frag gap red">almost nobody buys twice.</h2>
+  <h3 class="frag gap2 hl">what do you look into first? would you change your two picks?</h3>
+  <aside>3 min. attention worked, the product didn't. who picked "test with 100 students"? that was the sensemaking option, the one that tells you WHY before you spend. the designer fixes the product, the founder tells you what to look at. the creator and the money just made a bad product loud faster. land: demand without execution burns money. the map tells you which advantage you actually need.</aside>
 </section>
 
 <!-- 31 levels intro -->
-<section class="slide">
+<section class="slide" data-topic="the levels">
   <h1>it's a game with levels.</h1>
   <h2 class="frag gap2 red">and at every level, the game changes.</h2>
   <p class="frag gap small">the skill that got you here is not the skill that beats the next boss.</p>
 </section>
 
 <!-- 32 levels cards -->
-<section class="slide">
+<section class="slide" id="thelevelsslide">
   <div class="lvl">
     <div class="box"><div class="n">LEVEL 1</div><div class="you">alone. side hustle.</div><div class="boss">nobody cares. get one person to pay you anything.</div></div>
     <div class="box frag"><div class="n">LEVEL 2</div><div class="you">first real customers</div><div class="boss">make it repeatable. prove it wasn't a fluke.</div></div>
@@ -576,13 +634,17 @@ aside{display:none}
 </section>
 
 <!-- 35 GAME -->
-<section class="slide game" data-game>
+<section class="slide game left" data-game>
   <p class="label">₹ ROUND</p>
-  <h2 class="gap">name a game where getting good at an early level actively hurts you later.</h2>
+  <h3 class="gap">you and your best friend launch a clothing brand.<br>you spend ₹30,000 on 100 t-shirts because everyone says the designs are fire.</h3>
+  <h3 class="frag gap">a month later you've sold 8. six went to friends.</h3>
+  <h3 class="frag gap">your partner barely replies anymore.<br>you think the brand needs a better instagram page.<br>you have ₹5,000 left.</h3>
+  <h3 class="frag gap2 hl">what's going wrong? what do you do with the last ₹5,000?</h3>
+  <aside>bridge into failure modes. keep the labels hidden until they answer. compliments mistaken for demand = losing touch with reality / vitamin not painkiller. friend as cofounder without testing how they work = wrong people. spending the last money out of frustration = tilt. inventory before checking demand = running out of fuel.</aside>
 </section>
 
 <!-- 36 failure intro -->
-<section class="slide">
+<section class="slide" data-topic="the ways people die">
   <h1>if you just don't die,<br>you're ahead of most people.</h1>
   <p class="frag gap2">there are so many ways to die that survival IS the strategy.</p>
   <p class="frag gap">but don't be scared of it. failing is the fastest way to learn.<br><span class="hl">fail small and fast. not big and slow.</span></p>
@@ -668,26 +730,8 @@ aside{display:none}
   </ul>
 </section>
 
-<!-- 43 GAME -->
-<section class="slide game" data-game>
-  <p class="label">₹ ROUND</p>
-  <h2 class="gap">which of these are YOU most likely to die to?<br>be honest.</h2>
-</section>
-
-<!-- 44 EXERCISE 2 -->
-<section class="slide">
-  <p class="small">exercise · boss fight sim</p>
-  <div class="row gap2">
-    <div class="box"><h1>10</h1><p class="small">orders a day. you do everything.</p></div>
-    <h1>→</h1>
-    <div class="box red fill-red"><h1>100</h1><p class="small">tomorrow.</p></div>
-  </div>
-  <h2 class="frag gap2">what breaks first?</h2>
-  <aside>4 min. kids list things. tag each: "that's a LEVERAGE problem", "that's systems", "that's you tilting". lands: levels change the game.</aside>
-</section>
-
 <!-- 45 cheat code -->
-<section class="slide">
+<section class="slide" data-topic="cheat code">
   <div class="box purple fill-purple" style="font-family:ui-monospace,Menlo,monospace;text-align:left;font-size:clamp(16px,2vw,26px)">
     <div>&gt; SAVE FILE FOUND</div>
     <div>&gt; LEVEL 5 · TEAM · CAPITAL · CUSTOMERS</div>
@@ -700,7 +744,7 @@ aside{display:none}
 </section>
 
 <!-- 46 unsolicited -->
-<section class="slide">
+<section class="slide" data-topic="unsolicited advice">
   <h1>time for some unsolicited advice.</h1>
   <h2 class="frag gap2">quick check: who actually wants it?</h2>
   <aside>hands up. then next slide.</aside>
@@ -741,13 +785,19 @@ aside{display:none}
 
 </div>
 
+<div class="topic" id="topic"></div>
+<div class="mini" id="mini" title="click or m to close"><div id="minibody"></div><span class="tag" id="minitag">m · map</span></div>
 <div class="bounty box orange" id="bounty">₹<span id="bval">100</span></div>
-<div class="hud"><span id="hint">→ next · ← back · n notes · ? help</span><span id="count"></span></div>
+<div class="hud"><span id="hint">→ next · ← back · n notes · i index · ? help</span><span id="count"></span></div>
 <div class="notes" id="notes"><h4>NOTES</h4><div id="notesbody"></div></div>
+<div class="idx" id="idx"><h4>INDEX · click to jump · i or esc to close · type a number + enter to jump from anywhere</h4><ol id="idxlist"></ol></div>
 <div class="help box" id="help">
 → / space / click &nbsp; next<br>
 ← &nbsp; back<br>
 n &nbsp; speaker notes<br>
+m &nbsp; show / hide the map (any slide)<br>
+i &nbsp; index / quick jump<br>
+1-9 then enter &nbsp; jump to slide number<br>
 w &nbsp; bounty paid (reset to ₹100)<br>
 r &nbsp; nobody got it (rollover +₹100)<br>
 f &nbsp; fullscreen<br>
@@ -772,6 +822,34 @@ const count=document.getElementById('count');
 const notes=document.getElementById('notes'), notesbody=document.getElementById('notesbody');
 const bountyEl=document.getElementById('bounty'), bval=document.getElementById('bval');
 const help=document.getElementById('help');
+const topicEl=document.getElementById('topic'), mini=document.getElementById('mini');
+const minibody=document.getElementById('minibody'), minitag=document.getElementById('minitag');
+const miniSrc={'the map':()=>{const c=document.getElementById('themap').cloneNode(true);c.removeAttribute('id');c.removeAttribute('width');c.classList.remove('fig');return c},
+  'the levels':()=>{const w=document.createElement('div');w.className='lw';const c=document.querySelector('.lvl').cloneNode(true);w.appendChild(c);const h=document.createElement('div');h.className='lh';h.appendChild(w);return h}};
+let miniKind='';
+function fitMini(){const w=minibody.querySelector('.lw'); if(!w)return; const h=w.parentNode; const sc=minibody.clientWidth/1100; w.style.transform='scale('+sc+')'; h.style.height=(w.offsetHeight*sc)+'px'}
+function setMini(kind){ if(kind===miniKind)return; miniKind=kind; minibody.innerHTML=''; if(miniSrc[kind]){minibody.appendChild(miniSrc[kind]()); minitag.textContent='m · '+(kind==='the map'?'map':'levels')} }
+setMini('the map');
+mini.addEventListener('click',()=>mini.classList.remove('show','big'));
+window.addEventListener('resize',fitMini);
+function topicOf(n){ for(let k=n;k>=0;k--){ const t=slides[k].dataset.topic; if(t) return t } return '' }
+const idx=document.getElementById('idx'), idxlist=document.getElementById('idxlist');
+let typed='';
+function slideTitle(sec){
+  let n=sec.previousSibling, t='';
+  while(n&&!(n.nodeType===8)){ if(n.nodeType===1&&n.classList.contains('slide'))break; n=n.previousSibling }
+  if(n&&n.nodeType===8) t=n.textContent.trim().replace(/^[0-9]+[a-z]?\s*/,'');
+  if(!t){const el=sec.querySelector('h1,h2,h3,p');t=(el?el.textContent:'').replace(/\s+/g,' ').trim()}
+  if(sec.classList.contains('game')&&!/game/i.test(t)) t='₹ '+t;
+  return t.length>40?t.slice(0,38)+'…':t;
+}
+slides.forEach((sec,k)=>{
+  const li=document.createElement('li');
+  li.innerHTML='<span>'+(k+1)+'</span>'+slideTitle(sec);
+  if(sec.classList.contains('game')) li.classList.add('g');
+  li.addEventListener('click',()=>{show(k);idx.classList.remove('open')});
+  idxlist.appendChild(li);
+});
 let i=0, bounty=100;
 
 function show(n){
@@ -782,6 +860,10 @@ function show(n){
   const a=slides[i].querySelector('aside');
   notesbody.textContent=a?a.textContent:'(no notes)';
   bountyEl.classList.toggle('show',slides[i].hasAttribute('data-game'));
+  [...idxlist.children].forEach((li,k)=>li.classList.toggle('cur',k===i));
+  const t=topicOf(i);
+  if(topicEl.textContent!==t){topicEl.textContent=t;topicEl.classList.remove('flip');void topicEl.offsetWidth;topicEl.classList.add('flip')}
+  mini.classList.remove('show','big');
 }
 function frags(){return [...slides[i].querySelectorAll('.frag')]}
 function next(){
@@ -798,20 +880,25 @@ function setBounty(v,flash){bounty=v;bval.textContent=v;if(flash){bountyEl.class
 
 document.addEventListener('keydown',e=>{
   if(e.metaKey||e.ctrlKey||e.altKey)return;
+  if(/^[0-9]$/.test(e.key)){typed+=e.key;count.textContent='go to '+typed+' _';return}
+  if(e.key==='Enter'&&typed){const n=parseInt(typed,10)-1;typed='';show(n);idx.classList.remove('open');return}
+  if(typed&&e.key!=='Enter'){typed='';count.textContent=(i+1)+' / '+slides.length}
   switch(e.key){
     case 'ArrowRight':case ' ':case 'ArrowDown':case 'PageDown':e.preventDefault();next();break;
     case 'ArrowLeft':case 'ArrowUp':case 'PageUp':e.preventDefault();prev();break;
     case 'Home':show(0);break;
     case 'End':show(slides.length-1);break;
     case 'n':notes.classList.toggle('open');break;
+    case 'i':idx.classList.toggle('open');break;
+    case 'm':mini.classList.toggle('show');mini.classList.toggle('big');break;
     case 'w':setBounty(100,true);break;
     case 'r':setBounty(bounty+100,true);break;
     case 'f':document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();break;
     case '?':help.classList.toggle('open');break;
-    case 'Escape':help.classList.remove('open');notes.classList.remove('open');break;
+    case 'Escape':help.classList.remove('open');notes.classList.remove('open');idx.classList.remove('open');mini.classList.remove('show','big');break;
   }
 });
-document.getElementById('deck').addEventListener('click',e=>{ if(!notes.classList.contains('open')) next(); });
+document.getElementById('deck').addEventListener('click',e=>{ if(!notes.classList.contains('open')&&!idx.classList.contains('open')) next(); });
 
 show(parseInt(location.hash.slice(1))||0);
 </script>
